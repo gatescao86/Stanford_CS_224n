@@ -28,6 +28,11 @@ class PartialParse(object):
         ###     self.dependencies: The list of dependencies produced so far. Represented as a list of
         ###             tuples where each tuple is of the form (head, dependent).
         ###             Order for this list doesn't matter.
+        self.stack = ["ROOT"]
+        self.buffer = list(sentence)
+        self.dependencies = []
+
+
         ###
         ### Note: The root token should be represented with the string "ROOT"
         ### Note: If you need to use the sentence object to initialize anything, make sure to not directly 
@@ -52,6 +57,19 @@ class PartialParse(object):
         ###         2. Left Arc
         ###         3. Right Arc
 
+        if transition == "S":
+            w = self.buffer.pop(0)
+            self.stack.append(w)
+        
+        if transition == "LA":
+            left, right = self.stack[-2], self.stack[-1]
+            self.dependencies.append((right, left))
+            self.stack.pop(-2)
+
+        if transition == "RA":
+            left, right = self.stack[-2], self.stack[-1]
+            self.dependencies.append((left, right))
+            self.stack.pop(-1)
 
         ### END YOUR CODE
 
@@ -103,7 +121,19 @@ def minibatch_parse(sentences, model, batch_size):
     ###             to remove objects from the `unfinished_parses` list. This will free the underlying memory that
     ###             is being accessed by `partial_parses` and may cause your code to crash.
 
+    partial_parses = [PartialParse(sentence) for sentence in sentences]
+    unfinished_parses = partial_parses[:]
 
+    while unfinished_parses:
+        minibatch = unfinished_parses[:batch_size]
+        transitions = model.predict(minibatch)
+
+        for parse, transition in zip(minibatch, transitions):
+            parse.parse_step(transition)
+
+        unfinished_parses = [parse for parse in unfinished_parses if len(parse.stack) > 1 or len(parse.buffer) > 0]
+        
+    dependencies = [parse.dependencies for parse in partial_parses]
     ### END YOUR CODE
 
     return dependencies
