@@ -66,7 +66,7 @@ model = None
 if args.variant == 'vanilla':
     # TODO: [part c] Make some model here
     ### YOUR CODE HERE ###
-    pass
+    model = models.GPT(mconf).to(device)
     ### END YOUR CODE ###
 elif args.variant == 'rope':
     # TODO: [part g] Make some other model here
@@ -141,7 +141,38 @@ elif args.function == 'finetune':
     #     number of epochs for each case.
 
     ### YOUR CODE HERE ###
-    pass
+    if args.reading_params_path:
+        model.load_state_dict(torch.load(args.reading_params_path))
+        tconf = trainer.TrainerConfig(
+            max_epochs=10,
+            batch_size=256,
+            learning_rate=args.finetune_lr,
+            lr_decay=True,
+            warmup_tokens=512*20,
+            final_tokens=200*len(pretrain_dataset)*block_size,
+            num_workers=4,
+            writer=writer
+            )
+    else: 
+        tconf = trainer.TrainerConfig(
+            max_epochs=75,
+            batch_size=256,
+            learning_rate=args.finetune_lr,
+            lr_decay=True,
+            warmup_tokens=512*20,
+            final_tokens=200*len(pretrain_dataset)*block_size,
+            num_workers=4,
+            writer=writer
+            )
+
+    corpus = open(args.finetune_corpus_path, encoding='utf-8').read()
+    finetune_dataset = dataset.NameDataset(pretrain_dataset, corpus)
+
+    trainer = trainer.Trainer(model, finetune_dataset, None, tconf)
+    trainer.train()
+
+    torch.save(model.state_dict(), args.writing_params_path)
+        
     ### END YOUR CODE ###
 elif args.function == 'evaluate':
     assert args.outputs_path is not None
