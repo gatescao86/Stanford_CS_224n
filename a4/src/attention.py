@@ -28,7 +28,7 @@ def precompute_rotary_emb(dim, max_positions):
 
     Since the maximum length of sequences is known, we can precompute
     these values to speed up training.
-
+ 
     Implement the precompute_rotary_emb function that returns a tensor of
     shape (max_positions, dim/2, 2) where the last dimension contains
     the cos and sin values for each position and each dimension of
@@ -38,7 +38,16 @@ def precompute_rotary_emb(dim, max_positions):
     rope_cache = None
     # TODO: [part g]
     ### YOUR CODE HERE ###
-    pass
+    rope_cache = torch.zeros((max_positions, dim//2, 2))
+
+    theta = 1/(10000**(-2*(i-1)/dim) for i in torch.arange(dim//2))
+
+    for t in range(max_positions):
+        cos_t_theta = torch.cos(t*theta)
+        sin_t_theta = torch.sin(t*theta)
+
+        rope_cache[t,:,0] = cos_t_theta
+        rope_cache[t,:,1] = sin_t_theta
     ### END YOUR CODE ###
     return rope_cache
 
@@ -86,7 +95,7 @@ class CausalSelfAttention(nn.Module):
             # Hint: The maximum sequence length is given by config.block_size.
             rope_cache = None
             ### YOUR CODE HERE ###
-            pass
+            rope_cache = precompute_rotary_emb(config.n_embd, config.block_size)
             ### END YOUR CODE ###
 
             self.register_buffer("rope_cache", rope_cache)
