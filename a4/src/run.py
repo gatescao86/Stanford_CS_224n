@@ -102,7 +102,7 @@ if args.function == 'pretrain':
     # writer=writer
 
     ### YOUR CODE HERE ###
-    corpus = open(args.pretain_corpus_path, encoding='utf-8').read()
+    corpus = open(args.pretrain_corpus_path, encoding='utf-8').read()
     tconf = trainer.TrainerConfig(
         max_epochs=650,
         batch_size=128,

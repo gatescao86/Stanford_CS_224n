@@ -107,7 +107,7 @@ class CharCorruptionDataset(Dataset):
         truncated_document = document[start:end]
 
         trunc_len = len(truncated_document)
-        masked_len = random.normalvariate(int(trunc_len/4), 1)
+        masked_len = int(random.normalvariate(int(trunc_len/4), 1))
         masked_start = random.randint(0, int(trunc_len-masked_len))
         masked_end = random.randint(masked_start, int(masked_start+masked_len))
         masked_content = truncated_document[masked_start:masked_end]
@@ -119,6 +119,7 @@ class CharCorruptionDataset(Dataset):
 
         x = torch.tensor([self.stoi[c] for c in input], dtype=torch.long)
         y = torch.tensor([self.stoi[c] for c in output], dtype=torch.long)
+
 
         return x, y
         ### END YOUR CODE ###
